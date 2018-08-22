@@ -19,6 +19,11 @@ url: https://emos.plurk.com/#{hash_id}_w48_h22.gif
 
 function init(){
 	function initUI(){
+		var importProgress = document.createElement("progress");
+		importProgress.id = "emoticon-import_progress";
+		importProgress.max = 1;
+		importProgress.value = 0;
+
 		var importFile = document.createElement("input");
 		importFile.type = "file";
 		importFile.id = "emoticon-import_file";
@@ -30,27 +35,16 @@ function init(){
 		importButton.name = "emoticon-import";
 		importButton.value = "import emoticon";
 
-		/*
-		var listItemImport = document.createElement("li");
-		listItemImport.className = "pif-import cmp_import_off";
-		listItemImport.appendChild(importButton);
-		listItemImport.appendChild(importFile);
-		*/
-
 		var exportButton = document.createElement("input");
 		exportButton.type = "button";
 		exportButton.id = "emoticon-export";
 		exportButton.name = "emoticon-export";
 		exportButton.value = "export emoticon";
 
-		/*
-		var listItemExport = document.createElement("li");
-		listItemExport.className = "pif-export cmp_export_off";
-		listItemExport.appendChild(exportButton);
-		*/
-
 		var splashWindow = document.createElement("div");
 		splashWindow.style = "position: relative; top: 50%; transform: translate(0%, -50%); width: 300px; margin: auto; background-color: white; padding: 10px;";
+		splashWindow.appendChild(importProgress);
+		splashWindow.appendChild(document.createElement("br"));
 		splashWindow.appendChild(importFile);
 		splashWindow.appendChild(document.createElement("br"));
 		splashWindow.appendChild(importButton);
@@ -80,18 +74,17 @@ function init(){
 			emoticonExtensionButton: emoticonExtensionButton,
 			splashWindowBackground: splashWindowBackground,
 			splashWindow: splashWindow,
+			importProgress: importProgress,
 			importFile: importFile,
 			importButton: importButton,
 			exportButton: exportButton
 		};
 	}
 
-	unsafeWindow.PlurkEmoticonIO = function(splashWindowBackground, importFile){
-		console.log("init plurk emoticon extension");
-
+	unsafeWindow.PlurkEmoticonIO = function(splashWindowBackground, importFile, importProgress){
 		this.token = unsafeWindow.GLOBAL.session_user.token;
 		//this.token = document.body.innerHTML.match(/token=([^'^"^\s]+)/)[1];
-		//this.user_id = GLOBAL.session_user.id;
+		//this.user_id = unsafeWindow.GLOBAL.session_user.id;
 		console.log("token:", this.token);
 
 		function flatEmoticons(emoticonGroups){
@@ -137,10 +130,10 @@ function init(){
 				if(response.ok){
 					return response.json();
 				}else{
-					return response.text().then(function(errMessage){
+					return response.text().then(function(errResponse){
 						throw {
 							status: response.status,
-							message: errMessage
+							response: errResponse
 						};
 					});
 				}
@@ -148,6 +141,7 @@ function init(){
 				return currentEmoticonGroups;
 			}).catch(function(error){
 				console.error("error:", error);
+				throw error;
 			});
 		};
 
@@ -186,6 +180,7 @@ function init(){
 				return result;
 			}).catch(function(error){
 				console.error("error:", error);
+				throw error;
 			});
 		};
 
@@ -220,82 +215,95 @@ function init(){
 				return result;
 			}).catch(function(error){
 				console.error("error:", error);
+				throw error;
 			});
 		};
 
 		this.importEmoticon = function(){
-			console.log("import emo");
+			console.log("import emoticon");
 
-			//importFile = document.getElementById("emo-import_file");
+			//importProgress = document.getElementById("emoticon-import_progress");
+			//importFile = document.getElementById("emoticon-import_file");
 			if(importFile.files.length >= 1){
 				var importFileObj = importFile.files[0];
 				var importFileReader = new FileReader();
 				var that = this;
 				importFileReader.onload = function(event){
 					var importEmoticons = JSON.parse(event.target.result);
+					var importProgressMaxBackup = importProgress.max;
+					var importProgressValueBackup = importProgress.value;
+					importProgress.max = importEmoticons.length;
+					importProgress.value = 0;
 					that.getUserEmoticons().then(function(currentEmoticonGroups){
 						var currentEmoticons = flatEmoticons(currentEmoticonGroups);
 						var currentEmoticonsMap = createEmoticonsMap(currentEmoticons);
 						var addEmoticonPromise = Promise.resolve();
-						importEmoticons.forEach(function(importEmoticon){
+						importEmoticons.forEach(function(importEmoticon, index){
 							var group_id = ("group_id" in importEmoticon)?importEmoticon.group_id:1;
 							addEmoticonPromise = addEmoticonPromise.then(function(){
+								importProgress.value = index;
 								if(!((importEmoticon.hash_id in currentEmoticonsMap) && (importEmoticon.keyword === currentEmoticonsMap[importEmoticon.hash_id].keyword))){
-									console.log("add", importEmoticon.hash_id, importEmoticon.keyword, group_id);
+									console.log(index, "add", importEmoticon.hash_id, importEmoticon.keyword, group_id);
 									return that.addEmoticon(importEmoticon.hash_id, importEmoticon.keyword, group_id);
 								}else{
-									console.log("no-op", importEmoticon.hash_id, importEmoticon.keyword, group_id);
+									console.log(index, "no-op", importEmoticon.hash_id, importEmoticon.keyword, group_id);
 									return Promise.resolve();
 								}
 							});
 						});
 						addEmoticonPromise.then(function(){
-							console.log("import emo complete!");
-							alert("import emo complete!");
+							importProgress.value = importEmoticons.length;
+							alert("import emoticon complete!");
+							importProgress.max = importProgressMaxBackup;
+							importProgress.value = importProgressValueBackup;
 							splashWindowBackground.style.display = "none";
 							return Promise.resolve();
+						}).catch(function(error){
+							alert("error:\n"+JSON.stringify(error, null, 4));
+							importProgress.max = importProgressMaxBackup;
+							importProgress.value = importProgressValueBackup;
 						});
 					});
 				};
 				importFileReader.readAsText(importFileObj);
 			}else{
-				console.log("please choose import file!");
 				alert("please choose import file!");
-				splashWindowBackground.style.display = "none";
 			}
 		};
 
 		this.exportEmoticon = function(){
-			console.log("export emo");
+			console.log("export emoticon");
 
 			this.getUserEmoticons().then(function(currentEmoticonGroups){
 				var currentEmoticons = flatEmoticons(currentEmoticonGroups);
 				downloadObjectAsJSON("emoticon", currentEmoticons);
 
-				console.log("export emo complete!");
 				splashWindowBackground.style.display = "none";
+				return Promise.resolve();
 			});
-
-			console.log("export emo wait");
 		};
 
 		this.openEmoticonSplash = function(){
-			console.log("open emo splash");
+			console.log("open emoticon splash");
 			splashWindowBackground.style.display = "";
 		};
-
-		console.log("init plurk emoticon extension complete!");
 
 		return this;
 	};
 
+	console.log("init plurk emoticon extension");
+
 	var emoticonUI = initUI();
 
-	unsafeWindow.plurkEmoticonIO = new unsafeWindow.PlurkEmoticonIO(emoticonUI.splashWindowBackground, emoticonUI.importFile);
+	unsafeWindow.plurkEmoticonIO = new unsafeWindow.PlurkEmoticonIO(emoticonUI.splashWindowBackground, emoticonUI.importFile, emoticonUI.importProgress);
 
 	emoticonUI.importButton.addEventListener("click", function(){unsafeWindow.plurkEmoticonIO.importEmoticon();});
 	emoticonUI.exportButton.addEventListener("click", function(){unsafeWindow.plurkEmoticonIO.exportEmoticon();});
 	emoticonUI.emoticonExtensionButton.addEventListener("click", function(){unsafeWindow.plurkEmoticonIO.openEmoticonSplash();});
+
+	console.log("init plurk emoticon extension complete!");
+
+	return;
 }
 
 /*
