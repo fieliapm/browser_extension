@@ -188,7 +188,7 @@ function init(){
 				console.error("error:", error);
 			});
 		};
-		
+
 		this.removeEmoticon = function(hash_id){
 			var searchParams = new URLSearchParams();
 			searchParams.append("token", this.token);
