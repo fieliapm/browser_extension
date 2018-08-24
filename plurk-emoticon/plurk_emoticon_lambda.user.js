@@ -15,6 +15,8 @@ token: $1$01234567890abcdef@pdg1ab
 url: https://emos.plurk.com/#{hash_id}_w48_h22.gif
 */
 
+/* jshint esversion: 6 */
+
 (function(){
 
 "use strict";
@@ -23,28 +25,57 @@ function init(){
 	// view
 
 	function initUI(){
+		// style
+
+		const styleText = `
+div.splash-window {
+	position: relative;
+	top: 50%;
+	transform: translate(0%, -50%);
+	width: 500px;
+	margin: auto;
+	padding: 10px;
+	background-color: white;
+	color: black;
+}
+
+.splash-window-element {
+	width: 100%;
+}
+`;
+
 		// splash window
 
+		var style = document.createElement("style");
+		style.innerText = styleText;
+		document.head.appendChild(style);
+
 		const splashWindowHTML = `
-<div style="position: relative; top: 50%; transform: translate(0%, -50%); width: 500px; margin: auto; background-color: white; padding: 10px;">
-	<table>
-		<tr>
-			<th style="color: black;">import</th>
-			<th style="color: black;">export</th>
-		</tr>
-		<tr>
-			<td><progress id="emoticon-import_progress" max="1" value="0" style="width: 100%;"></progress></td>
-			<td></td>
-		</tr>
-		<tr>
-			<td><input type="file" id="emoticon-import_file" name="emoticon-import_file" style="width: 100%;"></td>
-			<td></td>
-		</tr>
-		<tr>
-			<td><input type="button" id="emoticon-import_button" name="emoticon-import_button" value="import emoticon"></td>
-			<td><input type="button" id="emoticon-export_button" name="emoticon-export_button" value="export emoticon"></td>
-		</tr>
-	</table>
+<div class="splash-window">
+	<div>
+		<div>
+			<div>import</div>
+			<div>export</div>
+		</div>
+		<div>
+			<div>
+				<div>
+					<progress id="emoticon-import_progress" class="splash-window-element" max="1" value="0"></progress>
+				</div>
+				<div>
+					<input type="file" id="emoticon-import_file" class="splash-window-element" name="emoticon-import_file">
+				</div>
+				<div>
+					<input type="button" id="emoticon-import_button" name="emoticon-import_button" value="import emoticon">
+				</div>
+			</div>
+			<div>
+				<div>
+					<input type="button" id="emoticon-export_button" name="emoticon-export_button" value="export emoticon">
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 `;
 
