@@ -1,15 +1,50 @@
 ﻿// ==UserScript==
 // @name           PlurkEmoticonLambda
 // @namespace      https://fieliapm.blogspot.com/
-// @version        0.0.9
+// @version        0.1.0
 // @author         fieliapm (fieliapm@gmail.com)
-// @description    Plurk Emoticon Extension Utility. made by fieliapm (fieliapm@gmail.com)
+// @description    Plurk emoticon extension utility, made by fieliapm (fieliapm@gmail.com)
 // @include        *://www.plurk.com/*
 // @exclude        *://www.plurk.com/m/*
 // @exclude        *://www.plurk.com/_comet/*
 // ==/UserScript==
 
 /*
+================================================================================
+
+PlurkEmoticonLambda - Plurk emoticon extension utility
+Copyright (C) 2018-present Himawari Tachibana <fieliapm@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+*/
+
+/*
+================================================================================
+author:
+Himawari Tachibana | https://github.com/fieliapm
+
+special thanks:
+catLee             | https://github.com/leemiyinghao
+Maplewing          | https://github.com/sinmaplewing
+================================================================================
+*/
+
+/*
+unused API:
+
 https://www.plurk.com/EmoticonManager/uploadEmoFromUrl
 token: $1$01234567890abcdef@pdg1ab
 url: https://emos.plurk.com/#{hash_id}_w48_h22.gif
@@ -58,6 +93,9 @@ div.css-table-cell { display: table-cell; }
 
 		const splashWindowHTML = `
 <div class="splash-window">
+	<div>
+		<input type="button" id="emoticon-close_splash_window" name="emoticon-close_splash_window" value="x">
+	</div>
 	<div class="css-table">
 		<div class="css-table-header">
 			<div class="css-table-row">
@@ -91,16 +129,16 @@ div.css-table-cell { display: table-cell; }
 
 		document.body.appendChild(splashWindowBackground);
 
-		// emoticon extension button
+		// emoticon lambda button
 
-		const emoticonExtensionButtonHTML = `<input type="button" id="emoticon-extension" name="emoticon-extension" value=":(">`;
+		const emoticonLambdaButtonHTML = `<input type="button" id="emoticon-lambda" name="emoticon-lambda" value=":(">`;
 
-		var listItemEmoticonExtension = document.createElement("li");
-		listItemEmoticonExtension.className = "pif-emoticon-extension cmp_emoticon_extension_off";
-		listItemEmoticonExtension.innerHTML = emoticonExtensionButtonHTML;
+		var listItemEmoticonLambda = document.createElement("li");
+		listItemEmoticonLambda.className = "pif-emoticon-lambda cmp_emoticon_lambda_off";
+		listItemEmoticonLambda.innerHTML = emoticonLambdaButtonHTML;
 
 		var iconsHolder = document.getElementById("main_poster").getElementsByClassName("icons_holder")[0];
-		iconsHolder.appendChild(listItemEmoticonExtension);
+		iconsHolder.appendChild(listItemEmoticonLambda);
 
 		return;
 	}
@@ -144,11 +182,13 @@ div.css-table-cell { display: table-cell; }
 		constructor(){
 			var importButton = document.getElementById("emoticon-import_button");
 			var exportButton = document.getElementById("emoticon-export_button");
-			var emoticonExtensionButton = document.getElementById("emoticon-extension");
+			var closeSplashWindowButton = document.getElementById("emoticon-close_splash_window");
+			var emoticonLambdaButton = document.getElementById("emoticon-lambda");
 
 			importButton.addEventListener("click", this.importEmoticon.bind(this));
 			exportButton.addEventListener("click", this.exportEmoticon.bind(this));
-			emoticonExtensionButton.addEventListener("click", this.openEmoticonSplash.bind(this));
+			closeSplashWindowButton.addEventListener("click", this.closeSplashWindow.bind(this));
+			emoticonLambdaButton.addEventListener("click", this.openSplashWindow.bind(this));
 
 			this.token = unsafeWindow.GLOBAL.session_user.token;
 			//this.token = document.body.innerHTML.match(/token=([^'^"^\s]+)/)[1];
@@ -238,9 +278,9 @@ div.css-table-cell { display: table-cell; }
 		}
 
 		uploadEmoticons(importEmoticons){
-			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
 			var importProgress = document.getElementById("emoticon-import_progress");
 			var importButton = document.getElementById("emoticon-import_button");
+			importButton.disabled = true;
 
 			var importProgressMaxBackup = importProgress.max;
 			var importProgressValueBackup = importProgress.value;
@@ -267,7 +307,6 @@ div.css-table-cell { display: table-cell; }
 			}).then(() => {
 				importProgress.value = importEmoticons.length;
 				alert("import emoticon complete!");
-				splashWindowBackground.style.display = "none";
 				return Promise.resolve();
 			}).catch((error) => {
 				alert("error:\n" + error.toString());
@@ -289,15 +328,15 @@ div.css-table-cell { display: table-cell; }
 			console.log("import emoticon");
 
 			var importFile = document.getElementById("emoticon-import_file");
-			var importButton = document.getElementById("emoticon-import_button");
 
 			if(importFile.files.length >= 1){
-				importButton.disabled = true;
-
 				var importFileObj = importFile.files[0];
 
 				var importFileReader = new FileReader();
 				importFileReader.onload = this.parseAndUploadEmoticons.bind(this);
+				importFileReader.onerror = function(){
+					alert("read import file failed!");
+				};
 				importFileReader.readAsText(importFileObj);
 			}else{
 				alert("please choose import file!");
@@ -307,7 +346,6 @@ div.css-table-cell { display: table-cell; }
 		exportEmoticon(){
 			console.log("export emoticon");
 
-			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
 			var exportButton = document.getElementById("emoticon-export_button");
 			exportButton.disabled = true;
 
@@ -317,13 +355,19 @@ div.css-table-cell { display: table-cell; }
 				return Promise.resolve();
 			}).finally(() => {
 				exportButton.disabled = false;
-				splashWindowBackground.style.display = "none";
 				return Promise.resolve();
 			});
 		}
 
-		openEmoticonSplash(){
-			console.log("open emoticon splash");
+		closeSplashWindow(){
+			console.log("close splash window");
+
+			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
+			splashWindowBackground.style.display = "none";
+		}
+
+		openSplashWindow(){
+			console.log("open splash window");
 
 			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
 			splashWindowBackground.style.display = "";
@@ -332,13 +376,13 @@ div.css-table-cell { display: table-cell; }
 
 	// init
 
-	console.log("init plurk emoticon extension");
+	console.log("init plurk emoticon lambda");
 
 	initUI();
 
 	unsafeWindow.plurkEmoticonIO = new PlurkEmoticonIO();
 
-	console.log("init plurk emoticon extension complete!");
+	console.log("init plurk emoticon lambda complete!");
 
 	return;
 }
