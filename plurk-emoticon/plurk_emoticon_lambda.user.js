@@ -42,6 +42,12 @@ div.splash-window {
 .splash-window-element {
 	width: 100%;
 }
+
+div.css-table { display: table; }
+div.css-table-row { display: table-row; }
+div.css-table-header { display: table-header-group; }
+div.css-table-body { display: table-row-group; }
+div.css-table-cell { display: table-cell; }
 `;
 
 		// splash window
@@ -52,27 +58,25 @@ div.splash-window {
 
 		const splashWindowHTML = `
 <div class="splash-window">
-	<div>
-		<div>
-			<div>import</div>
-			<div>export</div>
-		</div>
-		<div>
-			<div>
-				<div>
-					<progress id="emoticon-import_progress" class="splash-window-element" max="1" value="0"></progress>
-				</div>
-				<div>
-					<input type="file" id="emoticon-import_file" class="splash-window-element" name="emoticon-import_file">
-				</div>
-				<div>
-					<input type="button" id="emoticon-import_button" name="emoticon-import_button" value="import emoticon">
-				</div>
+	<div class="css-table">
+		<div class="css-table-header">
+			<div class="css-table-row">
+				<div class="css-table-cell">import</div>
+				<div class="css-table-cell">export</div>
 			</div>
-			<div>
-				<div>
-					<input type="button" id="emoticon-export_button" name="emoticon-export_button" value="export emoticon">
-				</div>
+		</div>
+		<div class="css-table-body">
+			<div class="css-table-row">
+				<div class="css-table-cell"><progress id="emoticon-import_progress" class="splash-window-element" max="1" value="0"></progress></div>
+				<div class="css-table-cell"></div>
+			</div>
+			<div class="css-table-row">
+				<div class="css-table-cell"><input type="file" id="emoticon-import_file" class="splash-window-element" name="emoticon-import_file"></div>
+				<div class="css-table-cell"></div>
+			</div>
+			<div class="css-table-row">
+				<div class="css-table-cell"><input type="button" id="emoticon-import_button" name="emoticon-import_button" value="import emoticon"></div>
+				<div class="css-table-cell"><input type="button" id="emoticon-export_button" name="emoticon-export_button" value="export emoticon"></div>
 			</div>
 		</div>
 	</div>
@@ -234,8 +238,9 @@ div.splash-window {
 		}
 
 		uploadEmoticons(importEmoticons){
-			var importProgress = document.getElementById("emoticon-import_progress");
 			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
+			var importProgress = document.getElementById("emoticon-import_progress");
+			var importButton = document.getElementById("emoticon-import_button");
 
 			var importProgressMaxBackup = importProgress.max;
 			var importProgressValueBackup = importProgress.value;
@@ -258,18 +263,20 @@ div.splash-window {
 						}
 					});
 				});
-				addEmoticonPromise.then(() => {
-					importProgress.value = importEmoticons.length;
-					alert("import emoticon complete!");
-					importProgress.max = importProgressMaxBackup;
-					importProgress.value = importProgressValueBackup;
-					splashWindowBackground.style.display = "none";
-					return Promise.resolve();
-				}).catch((error) => {
-					alert("error:\n"+error.toString());
-					importProgress.max = importProgressMaxBackup;
-					importProgress.value = importProgressValueBackup;
-				});
+				return addEmoticonPromise;
+			}).then(() => {
+				importProgress.value = importEmoticons.length;
+				alert("import emoticon complete!");
+				splashWindowBackground.style.display = "none";
+				return Promise.resolve();
+			}).catch((error) => {
+				alert("error:\n" + error.toString());
+				return Promise.resolve();
+			}).finally(() => {
+				importProgress.max = importProgressMaxBackup;
+				importProgress.value = importProgressValueBackup;
+				importButton.disabled = false;
+				return Promise.resolve();
 			});
 		}
 
@@ -282,8 +289,11 @@ div.splash-window {
 			console.log("import emoticon");
 
 			var importFile = document.getElementById("emoticon-import_file");
+			var importButton = document.getElementById("emoticon-import_button");
 
 			if(importFile.files.length >= 1){
+				importButton.disabled = true;
+
 				var importFileObj = importFile.files[0];
 
 				var importFileReader = new FileReader();
@@ -296,14 +306,17 @@ div.splash-window {
 
 		exportEmoticon(){
 			console.log("export emoticon");
-			console.log(this);
 
 			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
+			var exportButton = document.getElementById("emoticon-export_button");
+			exportButton.disabled = true;
 
 			this.getUserEmoticons().then((currentEmoticonGroups) => {
 				var currentEmoticons = flatEmoticons(currentEmoticonGroups);
 				downloadObjectAsJSON("emoticon", currentEmoticons);
-
+				return Promise.resolve();
+			}).finally(() => {
+				exportButton.disabled = false;
 				splashWindowBackground.style.display = "none";
 				return Promise.resolve();
 			});
