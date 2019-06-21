@@ -79,15 +79,15 @@ div.splash-window {
 }
 
 div.css-table { display: table; }
-div.css-table-row { display: table-row; }
 div.css-table-header { display: table-header-group; }
 div.css-table-body { display: table-row-group; }
+div.css-table-row { display: table-row; }
 div.css-table-cell { display: table-cell; }
 `;
 
 		// splash window
 
-		var style = document.createElement("style");
+		let style = document.createElement("style");
 		style.innerText = styleText;
 		document.head.appendChild(style);
 
@@ -121,7 +121,7 @@ div.css-table-cell { display: table-cell; }
 </div>
 `;
 
-		var splashWindowBackground = document.createElement("div");
+		let splashWindowBackground = document.createElement("div");
 		splashWindowBackground.style = "position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px; z-index: 10;";
 		splashWindowBackground.style.display = "none";
 		splashWindowBackground.id = "emoticon-splash_window_background";
@@ -133,11 +133,11 @@ div.css-table-cell { display: table-cell; }
 
 		const emoticonLambdaButtonHTML = `<input type="button" id="emoticon-lambda" name="emoticon-lambda" value=":(">`;
 
-		var listItemEmoticonLambda = document.createElement("li");
+		let listItemEmoticonLambda = document.createElement("li");
 		listItemEmoticonLambda.className = "pif-emoticon-lambda cmp_emoticon_lambda_off";
 		listItemEmoticonLambda.innerHTML = emoticonLambdaButtonHTML;
 
-		var iconsHolder = document.getElementById("main_poster").getElementsByClassName("icons_holder")[0];
+		let iconsHolder = document.getElementById("main_poster").getElementsByClassName("icons_holder")[0];
 		iconsHolder.appendChild(listItemEmoticonLambda);
 
 		return;
@@ -161,7 +161,7 @@ div.css-table-cell { display: table-cell; }
 	}
 
 	function createEmoticonsMap(emoticons){
-		var emoticonsMap = {};
+		let emoticonsMap = {};
 		emoticons.forEach((emoticon) => {
 			emoticonsMap[emoticon.hash_id] = Object.assign({}, emoticon);
 		});
@@ -169,8 +169,8 @@ div.css-table-cell { display: table-cell; }
 	}
 
 	function downloadObjectAsJSON(filename, exportObj){
-		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-		var downloadAnchorNode = document.createElement("a");
+		let dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+		let downloadAnchorNode = document.createElement("a");
 		downloadAnchorNode.href = dataStr;
 		downloadAnchorNode.download = filename+".json";
 		document.body.appendChild(downloadAnchorNode);
@@ -180,10 +180,10 @@ div.css-table-cell { display: table-cell; }
 
 	class PlurkEmoticonIO{
 		constructor(){
-			var importButton = document.getElementById("emoticon-import_button");
-			var exportButton = document.getElementById("emoticon-export_button");
-			var closeSplashWindowButton = document.getElementById("emoticon-close_splash_window");
-			var emoticonLambdaButton = document.getElementById("emoticon-lambda");
+			let importButton = document.getElementById("emoticon-import_button");
+			let exportButton = document.getElementById("emoticon-export_button");
+			let closeSplashWindowButton = document.getElementById("emoticon-close_splash_window");
+			let emoticonLambdaButton = document.getElementById("emoticon-lambda");
 
 			importButton.addEventListener("click", this.importEmoticon.bind(this));
 			exportButton.addEventListener("click", this.exportEmoticon.bind(this));
@@ -197,7 +197,7 @@ div.css-table-cell { display: table-cell; }
 		}
 
 		getUserEmoticons(){
-			var searchParams = new URLSearchParams();
+			let searchParams = new URLSearchParams();
 			searchParams.append("token", this.token);
 
 			return fetch("https://www.plurk.com/EmoticonManager/getUserEmoticons", {
@@ -209,7 +209,7 @@ div.css-table-cell { display: table-cell; }
 					return response.json();
 				}else{
 					return response.text().then((errorResponse) => {
-						var errorObj = {
+						let errorObj = {
 							status: response.status,
 							response: errorResponse
 						};
@@ -219,8 +219,8 @@ div.css-table-cell { display: table-cell; }
 			});
 		}
 
-		addEmoticon(hash_id, keyword, group_id) {
-			var searchParams = new URLSearchParams();
+		addEmoticon(hash_id, keyword, group_id){
+			let searchParams = new URLSearchParams();
 			searchParams.append("token", this.token);
 			searchParams.append("hash_id", hash_id);
 			searchParams.append("keyword", keyword);
@@ -235,7 +235,7 @@ div.css-table-cell { display: table-cell; }
 					return response.json();
 				}else{
 					return response.text().then((errorResponse) => {
-						var errorObj = {
+						let errorObj = {
 							status: response.status,
 							response: errorResponse,
 							emoticon: {
@@ -251,7 +251,7 @@ div.css-table-cell { display: table-cell; }
 		}
 
 		removeEmoticon(hash_id){
-			var searchParams = new URLSearchParams();
+			let searchParams = new URLSearchParams();
 			searchParams.append("token", this.token);
 			searchParams.append("hash_id", hash_id);
 
@@ -264,7 +264,7 @@ div.css-table-cell { display: table-cell; }
 					return response.json();
 				}else{
 					return response.text().then((errorResponse) => {
-						var errorObj = {
+						let errorObj = {
 							status: response.status,
 							response: errorResponse,
 							emoticon: {
@@ -278,20 +278,20 @@ div.css-table-cell { display: table-cell; }
 		}
 
 		uploadEmoticons(importEmoticons){
-			var importProgress = document.getElementById("emoticon-import_progress");
-			var importButton = document.getElementById("emoticon-import_button");
+			let importProgress = document.getElementById("emoticon-import_progress");
+			let importButton = document.getElementById("emoticon-import_button");
 			importButton.disabled = true;
 
-			var importProgressMaxBackup = importProgress.max;
-			var importProgressValueBackup = importProgress.value;
+			let importProgressMaxBackup = importProgress.max;
+			let importProgressValueBackup = importProgress.value;
 			importProgress.max = importEmoticons.length;
 			importProgress.value = 0;
 			this.getUserEmoticons().then((currentEmoticonGroups) => {
-				var currentEmoticons = flatEmoticons(currentEmoticonGroups);
-				var currentEmoticonsMap = createEmoticonsMap(currentEmoticons);
-				var addEmoticonPromise = Promise.resolve();
+				let currentEmoticons = flatEmoticons(currentEmoticonGroups);
+				let currentEmoticonsMap = createEmoticonsMap(currentEmoticons);
+				let addEmoticonPromise = Promise.resolve();
 				importEmoticons.forEach((importEmoticon, index) => {
-					var group_id = ("group_id" in importEmoticon)?importEmoticon.group_id:1;
+					let group_id = ("group_id" in importEmoticon)?importEmoticon.group_id:1;
 					addEmoticonPromise = addEmoticonPromise.then(() => {
 						importProgress.value = index;
 						if(!((importEmoticon.hash_id in currentEmoticonsMap) && (importEmoticon.keyword === currentEmoticonsMap[importEmoticon.hash_id].keyword))){
@@ -320,19 +320,19 @@ div.css-table-cell { display: table-cell; }
 		}
 
 		parseAndUploadEmoticons(event){
-			var importEmoticons = JSON.parse(event.target.result);
+			let importEmoticons = JSON.parse(event.target.result);
 			this.uploadEmoticons(importEmoticons);
 		}
 
 		importEmoticon(){
 			console.log("import emoticon");
 
-			var importFile = document.getElementById("emoticon-import_file");
+			let importFile = document.getElementById("emoticon-import_file");
 
 			if(importFile.files.length >= 1){
-				var importFileObj = importFile.files[0];
+				let importFileObj = importFile.files[0];
 
-				var importFileReader = new FileReader();
+				let importFileReader = new FileReader();
 				importFileReader.onload = this.parseAndUploadEmoticons.bind(this);
 				importFileReader.onerror = function(){
 					alert("read import file failed!");
@@ -346,11 +346,11 @@ div.css-table-cell { display: table-cell; }
 		exportEmoticon(){
 			console.log("export emoticon");
 
-			var exportButton = document.getElementById("emoticon-export_button");
+			let exportButton = document.getElementById("emoticon-export_button");
 			exportButton.disabled = true;
 
 			this.getUserEmoticons().then((currentEmoticonGroups) => {
-				var currentEmoticons = flatEmoticons(currentEmoticonGroups);
+				let currentEmoticons = flatEmoticons(currentEmoticonGroups);
 				downloadObjectAsJSON("emoticon", currentEmoticons);
 				return Promise.resolve();
 			}).finally(() => {
@@ -362,14 +362,14 @@ div.css-table-cell { display: table-cell; }
 		closeSplashWindow(){
 			console.log("close splash window");
 
-			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
+			let splashWindowBackground = document.getElementById("emoticon-splash_window_background");
 			splashWindowBackground.style.display = "none";
 		}
 
 		openSplashWindow(){
 			console.log("open splash window");
 
-			var splashWindowBackground = document.getElementById("emoticon-splash_window_background");
+			let splashWindowBackground = document.getElementById("emoticon-splash_window_background");
 			splashWindowBackground.style.display = "";
 		}
 	}
